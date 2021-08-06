@@ -66,7 +66,7 @@ public class ExampleServerDstu3IT implements IServerSupport {
     ourCtx = FhirContext.forDstu3();
     ourCtx.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
     ourCtx.getRestfulClientFactory().setSocketTimeout(1200 * 1000);
-    String ourServerBase = "http://localhost:" + port + "/fhir/";
+    String ourServerBase = "http://localhost:" + port + "/fhir/"; //variable?
     ourClient = ourCtx.newRestfulGenericClient(ourServerBase);
     ourClient.registerInterceptor(new LoggingInterceptor(true));
   }
@@ -182,7 +182,7 @@ public class ExampleServerDstu3IT implements IServerSupport {
     SocketImplementation mySocketImplementation = new SocketImplementation(mySubscriptionId.getIdPart(), EncodingEnum.JSON);
 
     myWebSocketClient.start();
-    URI echoUri = new URI("ws://localhost:" + port + "/websocket");
+    URI echoUri = new URI("ws://localhost:" + port + "/websocket"); //variable?
     ClientUpgradeRequest request = new ClientUpgradeRequest();
     ourLog.info("Connecting to : {}", echoUri);
     Future<Session> connection = myWebSocketClient.connect(mySocketImplementation, echoUri, request);

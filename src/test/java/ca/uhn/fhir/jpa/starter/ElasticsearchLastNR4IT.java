@@ -117,7 +117,7 @@ public class ElasticsearchLastNR4IT {
     ourCtx = FhirContext.forR4();
     ourCtx.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
     ourCtx.getRestfulClientFactory().setSocketTimeout(1200 * 1000);
-    String ourServerBase = "http://localhost:" + port + "/fhir/";
+    String ourServerBase = "http://localhost:" + port + "/fhir/"; //variables?
     ourClient = ourCtx.newRestfulGenericClient(ourServerBase);
     ourClient.registerInterceptor(new LoggingInterceptor(true));
   }
