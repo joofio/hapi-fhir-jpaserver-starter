@@ -18,7 +18,7 @@ EXPOSE 8080
 # 65532 is the nonroot user's uid
 # used here instead of the name to allow Kubernetes to easily detect that the container
 # is running as a non-root (uid != 0) user.
-USER 65532:65532
+#USER 65532:65532
 WORKDIR /app
 CMD ["/app/main.war"]
 
