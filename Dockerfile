@@ -34,5 +34,5 @@ RUN export JAVA_OPTS="$JAVA_OPTS -XX:+UseContainerSupport -Xms300m -Xmx300m"
 
 COPY catalina-dynamic-port.sh .
 
-CMD ["/usr/local/tomcat/catalina-dynamic-port.sh"]
+CMD ["/bin/sh", "/usr/local/tomcat/catalina-dynamic-port.sh"]
 #https://stackoverflow.com/questions/67677104/deploy-tomcat-docker-hello-world-to-heroku-returning-http503
