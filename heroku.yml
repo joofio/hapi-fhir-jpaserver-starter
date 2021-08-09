@@ -1,3 +1,8 @@
 build:
+ config:
+    DB_USER: ntayrklwwoqtbe
+    DB_PASSWORD: 924bfd9a65a631d4d8b808408785df620f2c22298f8fe070af9f0419f4811ea1
+    DB_HOST: ec2-52-30-81-192.eu-west-1.compute.amazonaws.com
+    DB: d9ollr515b7ddm
   docker:
     web: Dockerfile
