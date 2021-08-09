@@ -44,19 +44,20 @@ hapi:
     server_address: https://hapifhir-server.herokuapp.com
 #    defer_indexing_for_codesystems_of_size: 101
 #    install_transitive_ig_dependencies: true
-#    implementationguides:
+    implementationguides:
 ###    example from registry (packages.fhir.org)
-#      swiss:
-#        name: swiss.mednet.fhir
-#        version: 0.8.0
+      swiss:
+        name: swiss.mednet.fhir
+        version: 0.8.0
 #      example not from registry
-#      ips_1_0_0:
-#        url: https://build.fhir.org/ig/HL7/fhir-ips/package.tgz
-#        name: hl7.fhir.uv.ips
-#        version: 1.0.0
-#    supported_resource_types:
-#      - Patient
-#      - Observation
+      ips_1_0_0:
+        url: https://build.fhir.org/ig/HL7/fhir-ips/package.tgz
+        name: hl7.fhir.uv.ips
+        version: 1.0.0
+    supported_resource_types:
+      - Patient
+      - Observation
+      
 #    allow_cascading_deletes: true
 #    allow_contains_searches: true
 #    allow_external_references: true
