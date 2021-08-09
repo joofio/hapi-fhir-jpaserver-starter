@@ -376,3 +376,18 @@ see the `-distroless` suffix in the image tags.
 To add a custom operation, refer to the documentation in the core hapi-fhir libraries [here](https://hapifhir.io/hapi-fhir/docs/server_plain/rest_operations_operations.html).
 
 Within `hapi-fhir-jpaserver-starter`, create a generic class (that does not extend or implement any classes or interfaces), add the `@Operation` as a method within the generic class, and then register the class as a provider using `RestfulServer.registerProvider()`.
+
+## Using on heroku
+
+The app needs 3 variables for acessing the database:
+1. SPRING_DATASOURCE_URL
+2. SPRING_DATASOURCE_USERNAME
+3. SPRING_DATASOURCE_PASSWORD
+
+These should be configured through heroku with:  
+```heroku config:set SPRING_DATASOURCE_URL=<URL> --app=<APP_NAME>```  
+```heroku config:set SPRING_DATASOURCE_USERNAME=<USERNAME> --app=<APP_NAME>```  
+```heroku config:set SPRING_DATASOURCE_PASSWORD=<PASSWORD> --app=<APP_NAME>```
+
+Furthermore it will help to limit jvm memory usage with:
+```heroku config:set JAVA_TOOL_OPTIONS="-Xmx256m" --app=<APP_NAME>```
