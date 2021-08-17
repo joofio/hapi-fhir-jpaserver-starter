@@ -46,9 +46,9 @@ hapi:
 #    install_transitive_ig_dependencies: true
     implementationguides:
 ###    example from registry (packages.fhir.org)
-      swiss:
-        name: swiss.mednet.fhir
-        version: 0.8.0
+      # swiss:
+      #   name: swiss.mednet.fhir
+      #   version: 0.8.0
 #      example not from registry
       ips_1_0_0:
         url: https://build.fhir.org/ig/HL7/fhir-ips/package.tgz
