@@ -1,2 +1,2 @@
 run:
-  web: /bin/sh catalina-dynamic-port.sh
+  web: /bin/sh /usr/local/tomcat/catalina-dynamic-port.sh
