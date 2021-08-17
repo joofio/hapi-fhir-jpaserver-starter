@@ -21,7 +21,7 @@ jobs:
       with:
         java-version: 11
     - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      run: mvn -B package --file pom.xml --DskipTests
     - name: deploy heroku
       uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
       with:
