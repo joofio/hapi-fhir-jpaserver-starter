@@ -391,3 +391,4 @@ These should be configured through heroku with:
 
 Furthermore it will help to limit jvm memory usage with:
 ```heroku config:set JAVA_TOOL_OPTIONS="-Xmx256m" --app=<APP_NAME>```
+
