@@ -53,11 +53,12 @@
             <artifactId>websocket-client</artifactId>
             <version>${jetty_version}</version>
         </dependency>
-        <dependency>
+<!--        <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>8.0.25</version>
-        </dependency>
+        </dependency> 
+-->
         <!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -66,7 +67,7 @@
         </dependency>
 
         <!-- Needed for Email subscriptions -->
-        <dependency>
+     <!--        <dependency>
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
             <exclusions>
@@ -75,7 +76,7 @@
                     <artifactId>activation</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
+        </dependency> -->
 
         <!-- This dependency includes the core HAPI-FHIR classes -->
         <dependency>
@@ -173,12 +174,13 @@
             </exclusions>
         </dependency>
 
-        <!-- This example uses H2 embedded database. If you are using another database such as Mysql or Oracle, you may omit the following dependencies and replace them with an appropriate database client
+             <!-- This example uses H2 embedded database. If you are using another database such as Mysql or Oracle, you may omit the following dependencies and replace them with an appropriate database client
             dependency for your database platform. -->
-        <dependency>
+ <!--       <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-        </dependency>
+        </dependency> 
+    -->
 
         <!-- webjars -->
         <dependency>
