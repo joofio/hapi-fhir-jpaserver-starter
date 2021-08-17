@@ -102,17 +102,17 @@
             </exclusions>
         </dependency>
         <!-- This dependency includes the JPA CQL Server -->
-        <dependency>
+       <!-- <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>hapi-fhir-jpaserver-cql</artifactId>
             <version>${project.version}</version>
-        </dependency>
+        </dependency>-->
         <!-- This dependency includes the JPA MDM Server -->
-        <dependency>
+        <!-- <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>hapi-fhir-jpaserver-mdm</artifactId>
             <version>${project.version}</version>
-        </dependency>
+        </dependency> -->
         <!-- This dependency is used for the "FHIR Tester" web app overlay -->
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
@@ -218,7 +218,7 @@
         </dependency>
 
         <!-- The following dependencies are only needed for automated unit tests, you do not neccesarily need them to run the example. -->
-        <dependency>
+    <!--    <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlets</artifactId>
             <scope>test</scope>
@@ -262,7 +262,7 @@
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
-        </dependency>
+        </dependency> -->
 
 
         <!--
@@ -273,7 +273,7 @@
             <artifactId>javax.interceptor-api</artifactId>
             <scope>provided</scope>
         </dependency>
-
+ <!--
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>hapi-fhir-test-utilities</artifactId>
@@ -287,13 +287,13 @@
             <version>4.1.0</version>
             <scope>test</scope>
         </dependency>
-
+    -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-autoconfigure</artifactId>
             <version>${spring_boot_version}</version>
         </dependency>
-
+ <!--
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -313,7 +313,7 @@
             <version>${spring_boot_version}</version>
             <scope>test</scope>
         </dependency>
-
+    -->
 
     </dependencies>
 
@@ -394,7 +394,7 @@
             </plugin>
 
             <!-- This is to run the integration tests -->
-            <plugin>
+     <!--       <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
@@ -409,7 +409,8 @@
                     </execution>
                 </executions>
             </plugin>
-
+        -->
+        <!--
             <plugin>
                 <groupId>org.basepom.maven</groupId>
                 <artifactId>duplicate-finder-maven-plugin</artifactId>
@@ -426,7 +427,7 @@
                 <configuration>
                     <failBuildInCaseOfConflict>false</failBuildInCaseOfConflict>
                     <checkTestClasspath>false</checkTestClasspath>
-                    <!--
+             
                     <printEqualFiles>false</printEqualFiles>
                     <failBuildInCaseOfDifferentContentConflict>true</failBuildInCaseOfDifferentContentConflict>
                     <failBuildInCaseOfEqualContentConflict>true</failBuildInCaseOfEqualContentConflict>
@@ -439,8 +440,7 @@
                     <useResultFile>true</useResultFile>
                     <resultFileMinClasspathCount>2</resultFileMinClasspathCount>
                     <resultFile>${project.build.directory}/duplicate-finder-result.xml</resultFile>
-                    -->
-                    <!--
+                
                     <ignoredDependencies>
                         <dependency>
                             <groupId>javax.el</groupId>
@@ -495,7 +495,7 @@
                             <artifactId>checker-compat-qual</artifactId>
                         </dependency>
                     </ignoredDependencies>
-                    -->
+          
                     <ignoredResourcePatterns>
                         <ignoredResourcePattern>.*\.txt$</ignoredResourcePattern>
                         <ignoredResourcePattern>.*\.html$</ignoredResourcePattern>
@@ -503,9 +503,11 @@
                     </ignoredResourcePatterns>
                 </configuration>
             </plugin>
+             -->
         </plugins>
+       
     </build>
-
+          
     <profiles>
         <!-- Package the war for your preference. Use the boot profile if you prefer a single jar/war
         that can be started with and embedded application server. Default is jetty as it is assumed
