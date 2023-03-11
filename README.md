@@ -2,9 +2,9 @@
 
 This project is a complete starter project you can use to deploy a FHIR server using HAPI FHIR JPA.
 
-Note that this project is specifically intended for end users of the HAPI FHIR JPA server module (in other words, it helps you implement HAPI FHIR, it is not the source of the library itself). If you are looking for the main HAPI FHIR project, see here: https://github.com/jamesagnew/hapi-fhir
+Note that this project is specifically intended for end users of the HAPI FHIR JPA server module (in other words, it helps you implement HAPI FHIR, it is not the source of the library itself). If you are looking for the main HAPI FHIR project, see here: https://github.com/hapifhir/hapi-fhir
 
-Need Help? Please see: https://github.com/jamesagnew/hapi-fhir/wiki/Getting-Help
+Need Help? Please see: https://github.com/hapifhir/hapi-fhir/wiki/Getting-Help
 
 ## Prerequisites
 
@@ -17,9 +17,9 @@ In order to use this sample, you should have:
  - Apache Maven build tool (newest version)
 
 ### or
- - Docker, as the entire project can be built using multistage docker (with both JDK and maven wrapped in docker) or used directly from [Docker Hub](https://hub.docker.com/repository/docker/hapiproject/hapi)
+ - Docker, as the entire project can be built using multistage docker (with both JDK and maven wrapped in docker) or used directly from [Docker Hub](https://hub.docker.com/r/hapiproject/hapi)
 
-## Running via [Docker Hub](https://hub.docker.com/repository/docker/hapiproject/hapi)
+## Running via [Docker Hub](https://hub.docker.com/r/hapiproject/hapi)
 
 Each tagged/released version of `hapi-fhir-jpaserver` is built as a Docker image and published to Docker hub. To run the published Docker image from DockerHub:
 
@@ -177,28 +177,11 @@ Server will then be accessible at http://localhost:8080/ and eg. http://localhos
 
 Much of this HAPI starter project can be configured using the yaml file in _src/main/resources/application.yaml_. By default, this starter project is configured to use H2 as the database.
 
-### MySql configuration
+### MySQL configuration
 
-To configure the starter app to use MySQL, instead of the default H2, update the application.yaml file to have the following:
+HAPI FHIR JPA Server does not support MySQL as it is deprecated.
 
-```yaml
-spring:
-  datasource:
-    url: 'jdbc:mysql://localhost:3306/hapi_dstu3'
-    username: admin
-    password: admin
-    driverClassName: com.mysql.jdbc.Driver
-```
-On some systems, it might be necessary to override hibernate's default naming strategy. The naming strategy must be set using spring.jpa.hibernate.physical_naming_strategy. 
-
-```yaml
-spring:
-  jpa:
-    hibernate.physical_naming_strategy: NAME_OF_PREFERRED_STRATEGY
-```
-On linux systems or when using docker mysql containers, it will be necessary to review the case-sensitive setup for
-mysql schema identifiers. See  https://dev.mysql.com/doc/refman/8.0/en/identifier-case-sensitivity.html. We suggest you
-set `lower_case_table_names=1` during mysql startup.
+See more at https://hapifhir.io/hapi-fhir/docs/server_jpa/database_support.html
 
 ### PostgreSQL configuration
 
@@ -207,13 +190,55 @@ To configure the starter app to use PostgreSQL, instead of the default H2, updat
 ```yaml
 spring:
   datasource:
-    url: 'jdbc:postgresql://localhost:5432/hapi_dstu3'
+    url: 'jdbc:postgresql://localhost:5432/hapi'
     username: admin
     password: admin
     driverClassName: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgres94Dialect
+      hibernate.search.enabled: false
+
+      # Then comment all hibernate.search.backend.*
 ```
 
 Because the integration tests within the project rely on the default H2 database configuration, it is important to either explicity skip the integration tests during the build process, i.e., `mvn install -DskipTests`, or delete the tests altogether. Failure to skip or delete the tests once you've configured PostgreSQL for the datasource.driver, datasource.url, and hibernate.dialect as outlined above will result in build errors and compilation failure.
+
+### Microsoft SQL Server configuration
+
+To configure the starter app to use MS SQL Server, instead of the default H2, update the application.yaml file to have the following:
+
+```yaml
+spring:
+  datasource:
+    url: 'jdbc:sqlserver://<server>:<port>;databaseName=<databasename>'
+    username: admin
+    password: admin
+    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+```
+
+Also, make sure you are not setting the Hibernate dialect explicitly, in other words remove any lines similar to:
+
+```
+hibernate.dialect: {some none Microsoft SQL dialect}
+```
+
+
+Because the integration tests within the project rely on the default H2 database configuration, it is important to either explicity skip the integration tests during the build process, i.e., `mvn install -DskipTests`, or delete the tests altogether. Failure to skip or delete the tests once you've configured PostgreSQL for the datasource.driver, datasource.url, and hibernate.dialect as outlined above will result in build errors and compilation failure.
+
+
+NOTE: MS SQL Server by default uses a case-insensitive codepage. This will cause errors with some operations - such as when expanding case-sensitive valuesets (UCUM) as there are unique indexes defined on the terminology tables for codes.
+It is recommended to deploy a case-sensitive database prior to running HAPI FHIR when using MS SQL Server to avoid these and potentially other issues.
+
+## Adding custom interceptors
+Custom interceptors can be registered with the server by including the property `hapi.fhir.custom-interceptor-classes`. This will take a comma separated list of fully-qualified class names which will be registered with the server. 
+Interceptors will be discovered in one of two ways: 
+
+1) discovered from the Spring application context as existing Beans (can be used in conjunction with `hapi.fhir.custom-bean-packages`) or registered with Spring via other methods
+
+or 
+
+2) classes will be instantiated via reflection if no matching Bean is found
 
 ## Customizing The Web Testpage UI
 
@@ -267,16 +292,22 @@ reached at http://localhost:8080/.
 In order to use another port, change the `ports` parameter
 inside `docker-compose.yml` to `8888:8080`, where 8888 is a port of your choice.
 
-The docker compose set also includes my MySQL database, if you choose to use MySQL instead of H2, change the following
-properties in application.yaml:
+The docker compose set also includes PostgreSQL database, if you choose to use PostgreSQL instead of H2, change the following
+properties in `src/main/resources/application.yaml`:
 
 ```yaml
 spring:
   datasource:
-    url: 'jdbc:mysql://hapi-fhir-mysql:3306/hapi'
+    url: 'jdbc:postgresql://hapi-fhir-postgres:5432/hapi'
     username: admin
     password: admin
-    driverClassName: com.mysql.jdbc.Driver
+    driverClassName: org.postgresql.Driver
+jpa:
+  properties:
+    hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgres94Dialect
+    hibernate.search.enabled: false
+
+    # Then comment all hibernate.search.backend.*
 ```
 
 ## Running hapi-fhir-jpaserver directly from IntelliJ as Spring Boot
@@ -314,8 +345,6 @@ Run the configuration.
 
 Point your browser (or fiddler, or what have you) to `http://localhost:8080/hapi/baseDstu3/Patient`
 
-It is important to use MySQL5Dialect when using MySQL version 5+.
-
 ## Enabling Subscriptions
 
 The server may be configured with subscription support by enabling properties in the [application.yaml](https://github.com/hapifhir/hapi-fhir-jpaserver-starter/blob/master/src/main/resources/application.yaml) file:
@@ -326,9 +355,9 @@ The server may be configured with subscription support by enabling properties in
 
 - `hapi.fhir.subscription.websocket_enabled` - Enables websocket subscriptions. With this enabled, your server will accept incoming websocket connections on the following URL (this example uses the default context path and port, you may need to tweak depending on your deployment environment): [ws://localhost:8080/websocket](ws://localhost:8080/websocket)
 
-## Enabling CQL
+## Enabling Clinical Reasoning
 
-Set `hapi.fhir.cql_enabled=true` in the [application.yaml](https://github.com/hapifhir/hapi-fhir-jpaserver-starter/blob/master/src/main/resources/application.yaml) file to enable [Clinical Quality Language](https://cql.hl7.org/) on this server.
+Set `hapi.fhir.cr_enabled=true` in the [application.yaml](https://github.com/hapifhir/hapi-fhir-jpaserver-starter/blob/master/src/main/resources/application.yaml) file to enable [Clinical Quality Language](https://cql.hl7.org/) on this server.
 
 ## Enabling MDM (EMPI)
 
@@ -354,10 +383,14 @@ elasticsearch.schema_management_strategy=CREATE
 
 Set `hapi.fhir.lastn_enabled=true` in the [application.yaml](https://github.com/hapifhir/hapi-fhir-jpaserver-starter/blob/master/src/main/resources/application.yaml) file to enable the $lastn operation on this server.  Note that the $lastn operation relies on Elasticsearch, so for $lastn to work, indexing must be enabled using Elasticsearch.
 
+## Enabling Resource to be stored in Lucene Index
+
+Set `hapi.fhir.store_resource_in_lucene_index_enabled` in the [application.yaml](https://github.com/hapifhir/hapi-fhir-jpaserver-starter/blob/master/src/main/resources/application.yaml) file to enable storing of resource json along with Lucene/Elasticsearch index mappings.
+
 ## Changing cached search results time
 
-It is possible to change the cached search results time. The option `reuse_cached_search_results_millis` in the [application.yaml] is 6000 miliseconds by default.
-Set `reuse_cached_search_results_millis: -1` in the [application.yaml] file to ignore the cache time every search. 
+It is possible to change the cached search results time. The option `reuse_cached_search_results_millis` in the [application.yaml](https://github.com/hapifhir/hapi-fhir-jpaserver-starter/blob/master/src/main/resources/application.yaml) is 6000 miliseconds by default.
+Set `reuse_cached_search_results_millis: -1` in the [application.yaml](https://github.com/hapifhir/hapi-fhir-jpaserver-starter/blob/master/src/main/resources/application.yaml) file to ignore the cache time every search.
 
 ## Build the distroless variant of the image (for lower footprint and improved security)
 
@@ -368,7 +401,7 @@ using the `gcr.io/distroless/java-debian10:11` base image:
 docker build --target=release-distroless -t hapi-fhir:distroless .
 ```
 
-Note that distroless images are also automatically build and pushed to the container registry,
+Note that distroless images are also automatically built and pushed to the container registry,
 see the `-distroless` suffix in the image tags.
 
 ## Adding custom operations
@@ -377,18 +410,19 @@ To add a custom operation, refer to the documentation in the core hapi-fhir libr
 
 Within `hapi-fhir-jpaserver-starter`, create a generic class (that does not extend or implement any classes or interfaces), add the `@Operation` as a method within the generic class, and then register the class as a provider using `RestfulServer.registerProvider()`.
 
-## Using on heroku
+## Enable OpenTelemetry auto-instrumentation
 
-The app needs 3 variables for acessing the database:
-1. SPRING_DATASOURCE_URL
-2. SPRING_DATASOURCE_USERNAME
-3. SPRING_DATASOURCE_PASSWORD
+The container image includes the [OpenTelemetry Java auto-instrumentation](https://github.com/open-telemetry/opentelemetry-java-instrumentation)
+Java agent JAR which can be used to export telemetry data for the HAPI FHIR JPA Server. You can enable it by specifying the `-javaagent` flag,
+for example by overriding the `JAVA_TOOL_OPTIONS` environment variable:
 
-These should be configured through heroku with:  
-```heroku config:set SPRING_DATASOURCE_URL=<URL> --app=<APP_NAME>```  
-```heroku config:set SPRING_DATASOURCE_USERNAME=<USERNAME> --app=<APP_NAME>```  
-```heroku config:set SPRING_DATASOURCE_PASSWORD=<PASSWORD> --app=<APP_NAME>```
+```sh
+docker run --rm -it -p 8080:8080 \
+  -e JAVA_TOOL_OPTIONS="-javaagent:/app/opentelemetry-javaagent.jar" \
+  -e OTEL_TRACES_EXPORTER="jaeger" \
+  -e OTEL_SERVICE_NAME="hapi-fhir-server" \
+  -e OTEL_EXPORTER_JAEGER_ENDPOINT="http://jaeger:14250" \
+  docker.io/hapiproject/hapi:latest
+```
 
-Furthermore it will help to limit jvm memory usage with:
-```heroku config:set JAVA_TOOL_OPTIONS="-Xmx256m" --app=<APP_NAME>```
-
+You can configure the agent using environment variables or Java system properties, see <https://opentelemetry.io/docs/instrumentation/java/automatic/agent-config/> for details.

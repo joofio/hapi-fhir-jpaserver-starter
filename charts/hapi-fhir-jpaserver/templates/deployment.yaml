@@ -28,36 +28,55 @@ spec:
       {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      {{- if .Values.postgresql.enabled }}
       initContainers:
-        - name: wait-for-db
-          image: busybox:1.32
+        - name: wait-for-db-to-be-ready
+          image: docker.io/bitnami/postgresql:15.1.0-debian-11-r0@sha256:27915588d5203a10a1c23624d9c81644437f33b7c224e25f79bcd9bd09bbb8e2
           imagePullPolicy: IfNotPresent
+          {{- with .Values.restrictedContainerSecurityContext }}
           securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            privileged: false
-            capabilities:
-              drop:
-                - ALL
-            runAsNonRoot: true
-            runAsUser: 11111
-            runAsGroup: 11111
-          command: ["sh", "-c", "while ! nc -z {{ .Release.Name }}-postgresql 5432 -w 5; do echo $(date) waiting for database; sleep 5; done;"]
-      {{- end }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            - name: PGHOST
+              value: "{{ include "hapi-fhir-jpaserver.database.host" . }}"
+            - name: PGPORT
+              value: "{{ include "hapi-fhir-jpaserver.database.port" . }}"
+            - name: PGUSER
+              value: "{{ include "hapi-fhir-jpaserver.database.user" . }}"
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              until pg_isready; do
+                echo "Waiting for DB ${PGUSER}@${PGHOST}:${PGPORT} to be up";
+                sleep 15;
+              done;
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: {{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
               containerPort: 8080
               protocol: TCP
+            - name: http-metrics
+              containerPort: 8081
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /readyz
+              port: http
+          {{- with .Values.startupProbe }}
+            initialDelaySeconds: {{ .initialDelaySeconds }}
+            periodSeconds: {{ .periodSeconds }}
+            timeoutSeconds: {{ .timeoutSeconds }}
+            successThreshold: {{ .successThreshold }}
+            failureThreshold: {{ .failureThreshold }}
+          {{- end }}
           readinessProbe:
             httpGet:
-              path: /
+              path: /readyz
               port: http
           {{- with .Values.readinessProbe }}
             initialDelaySeconds: {{ .initialDelaySeconds }}
@@ -66,11 +85,11 @@ spec:
             successThreshold: {{ .successThreshold }}
             failureThreshold: {{ .failureThreshold }}
           {{- end }}
-          startupProbe:
+          livenessProbe:
             httpGet:
-              path: /fhir/Patient?_count=1
+              path: /livez
               port: http
-          {{- with .Values.startupProbe }}
+          {{- with .Values.livenessProbe }}
             initialDelaySeconds: {{ .initialDelaySeconds }}
             periodSeconds: {{ .periodSeconds }}
             timeoutSeconds: {{ .timeoutSeconds }}
@@ -88,15 +107,17 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ include "hapi-fhir-jpaserver.postgresql.secretName" . }}
-                  key: postgresql-password
+                  key: {{ include "hapi-fhir-jpaserver.postgresql.secretKey" . }}
             - name: SPRING_DATASOURCE_DRIVERCLASSNAME
               value: org.postgresql.Driver
-            - name: SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT
-              value: org.hibernate.dialect.PostgreSQL10Dialect
+            - name: spring.jpa.properties.hibernate.dialect
+              value: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgres94Dialect
             - name: HAPI_FHIR_USE_APACHE_ADDRESS_STRATEGY
               value: "true"
-            - name: SPRING_JPA_DATABASE_PLATFORM
-              value: org.hibernate.dialect.PostgreSQLDialect
+            - name: MANAGEMENT_ENDPOINT_HEALTH_PROBES_ADD_ADDITIONAL_PATHS
+              value: "true"
+            - name: MANAGEMENT_SERVER_PORT
+              value: "8081"
             {{- if .Values.extraEnv }}
             {{ toYaml .Values.extraEnv | nindent 12 }}
             {{- end }}
@@ -115,6 +136,10 @@ spec:
       {{- end }}
       {{- with .Values.tolerations }}
       tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
