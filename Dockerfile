@@ -1,6 +1,25 @@
 FROM docker.io/library/maven:3.9.12-eclipse-temurin-17 AS build-hapi
 WORKDIR /tmp/hapi-fhir-jpaserver-starter
 
+# Fix SSL/TLS certificate issues by importing system CA certificates into Java's truststore
+# This ensures Maven can connect to repositories over HTTPS
+ENV JAVA_HOME=/opt/java/openjdk
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates && \
+    update-ca-certificates && \
+    # Split the CA bundle and import each certificate into Java's cacerts
+    mkdir -p /tmp/certs && cd /tmp/certs && \
+    awk 'BEGIN {c=0} /-----BEGIN CERTIFICATE-----/{c++} {print > "cert" c ".pem"}' /etc/ssl/certs/ca-certificates.crt && \
+    for cert in /tmp/certs/*.pem; do \
+        if [ -f "$cert" ] && grep -q "BEGIN CERTIFICATE" "$cert" 2>/dev/null; then \
+            alias="cert-$(basename $cert .pem)"; \
+            ${JAVA_HOME}/bin/keytool -importcert -trustcacerts -cacerts \
+                -storepass changeit -noprompt -alias "$alias" -file "$cert" 2>/dev/null || true; \
+        fi; \
+    done && \
+    rm -rf /tmp/certs && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 ARG OPENTELEMETRY_JAVA_AGENT_VERSION=2.24.0
 RUN curl -LSsO https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${OPENTELEMETRY_JAVA_AGENT_VERSION}/opentelemetry-javaagent.jar
 
