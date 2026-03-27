@@ -3,6 +3,8 @@ WORKDIR /tmp/hapi-fhir-jpaserver-starter
 
 # Fix SSL/TLS certificate issues by importing system CA certificates into Java's truststore
 # This ensures Maven can connect to repositories over HTTPS
+# Note: The 'changeit' password is Java's default cacerts password and cannot be changed
+#       for the system truststore without breaking compatibility
 ENV JAVA_HOME=/opt/java/openjdk
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates && \
@@ -12,9 +14,9 @@ RUN apt-get update && \
     awk 'BEGIN {c=0} /-----BEGIN CERTIFICATE-----/{c++} {print > "cert" c ".pem"}' /etc/ssl/certs/ca-certificates.crt && \
     for cert in /tmp/certs/*.pem; do \
         if [ -f "$cert" ] && grep -q "BEGIN CERTIFICATE" "$cert" 2>/dev/null; then \
-            alias="cert-$(basename $cert .pem)"; \
+            alias="cert-$(basename "$cert" .pem)"; \
             ${JAVA_HOME}/bin/keytool -importcert -trustcacerts -cacerts \
-                -storepass changeit -noprompt -alias "$alias" -file "$cert" 2>/dev/null || true; \
+                -storepass changeit -noprompt -alias "$alias" -file "$cert" 2>&1 | grep -v "already exists" || true; \
         fi; \
     done && \
     rm -rf /tmp/certs && \
