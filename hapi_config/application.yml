@@ -25,8 +25,8 @@ hapi:
     default_page_size: 10
     
     # Caminhos para conteúdo personalizado
-    custom_content_path: /custom
-    app_content_path: /apps
+    custom_content_path: /custom/
+    app_content_path: /apps/
     
     # OpenAPI/Swagger
     openapi_enabled: true
