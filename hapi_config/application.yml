@@ -24,9 +24,9 @@ hapi:
     default_pretty_print: true
     default_page_size: 10
     
-    # Caminhos para conteúdo personalizado (paths must end with trailing slash)
-    custom_content_path: /custom/
-    app_content_path: /apps/
+    # Caminhos para conteúdo personalizado
+    custom_content_path: /custom
+    app_content_path: /apps
     
     # OpenAPI/Swagger
     openapi_enabled: true
@@ -115,7 +115,7 @@ spring:
     check-location: false
     baselineOnMigrate: true
   datasource:
-    url: 'jdbc:postgresql://hapi-fhir-postgres:5432/hapi'
+    url: 'jdbc:postgresql://db:5432/hapi'
     username: admin
     password: admin
     driverClassName: org.postgresql.Driver
