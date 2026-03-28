@@ -24,11 +24,9 @@ hapi:
     default_pretty_print: true
     default_page_size: 10
     
-    # NOTE: custom_content_path and app_content_path are disabled because
-    # the pre-built hapiproject/hapi:latest image has a bug where it strips
-    # the trailing slash from the path. To use these features, build from source.
-    # custom_content_path: /custom/
-    # app_content_path: /apps/
+    # Caminhos para conteúdo personalizado (paths must end with trailing slash)
+    custom_content_path: /custom/
+    app_content_path: /apps/
     
     # OpenAPI/Swagger
     openapi_enabled: true

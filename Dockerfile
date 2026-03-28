@@ -1,6 +1,13 @@
 FROM docker.io/library/maven:3.9.12-eclipse-temurin-17 AS build-hapi
 WORKDIR /tmp/hapi-fhir-jpaserver-starter
 
+# Import SSL interception CA certificate if present (for build environments with HTTPS proxy)
+COPY mkcert-ca.crt /tmp/mkcert-ca.crt
+RUN keytool -importcert -trustcacerts -noprompt -storepass changeit \
+        -keystore $JAVA_HOME/lib/security/cacerts \
+        -file /tmp/mkcert-ca.crt -alias mkcert-ca 2>/dev/null || true && \
+    rm -f /tmp/mkcert-ca.crt
+
 ARG OPENTELEMETRY_JAVA_AGENT_VERSION=2.24.0
 RUN curl -LSsO https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${OPENTELEMETRY_JAVA_AGENT_VERSION}/opentelemetry-javaagent.jar
 

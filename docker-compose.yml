@@ -1,8 +1,6 @@
 services:
   hapi-fhir-jpaserver-start:
-    # Using pre-built image because Docker build has SSL certificate issues in this build environment
-    # For local builds, change to "build: ." to build from source
-    image: hapiproject/hapi:latest
+    build: .
     container_name: hapi-fhir-jpaserver-start
     restart: on-failure
     environment:
