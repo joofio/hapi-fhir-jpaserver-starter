@@ -21,22 +21,17 @@ public class CustomContentFilesConfigurer implements WebMvcConfigurer {
 	@Override
 	public void addResourceHandlers(@NotNull ResourceHandlerRegistry theRegistry) {
 		if (!theRegistry.hasMappingForPattern(CUSTOM_CONTENT + "/**")) {
-
-			try {
-				String path = customContentPath;
-				if (!path.endsWith("/")) {
-					path = path + "/";
-				}
-				// Ensure proper file:// URL format for absolute paths
-				if (path.startsWith("/")) {
-					path = "file://" + path;
-				}
-				theRegistry
-						.addResourceHandler(CUSTOM_CONTENT + "/**")
-						.addResourceLocations(path);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
+			String path = customContentPath;
+			if (!path.endsWith("/")) {
+				path = path + "/";
 			}
+			// Ensure proper file:// URL format for absolute paths
+			if (path.startsWith("/")) {
+				path = "file://" + path;
+			}
+			theRegistry
+					.addResourceHandler(CUSTOM_CONTENT + "/**")
+					.addResourceLocations(path);
 		}
 	}
 }

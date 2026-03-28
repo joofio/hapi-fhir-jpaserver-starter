@@ -23,23 +23,17 @@ public class WebAppFilesConfigurer implements WebMvcConfigurer {
 	@Override
 	public void addResourceHandlers(@NotNull ResourceHandlerRegistry theRegistry) {
 		if (!theRegistry.hasMappingForPattern(WEB_CONTENT + "/**")) {
-			{
-				try {
-					String path = appContentPath;
-					if (!path.endsWith("/")) {
-						path = path + "/";
-					}
-					// Ensure proper file:// URL format for absolute paths
-					if (path.startsWith("/")) {
-						path = "file://" + path;
-					}
-					theRegistry
-							.addResourceHandler(WEB_CONTENT + "/**")
-							.addResourceLocations(path);
-				} catch (Exception e) {
-					throw new RuntimeException(e);
-				}
+			String path = appContentPath;
+			if (!path.endsWith("/")) {
+				path = path + "/";
 			}
+			// Ensure proper file:// URL format for absolute paths
+			if (path.startsWith("/")) {
+				path = "file://" + path;
+			}
+			theRegistry
+					.addResourceHandler(WEB_CONTENT + "/**")
+					.addResourceLocations(path);
 		}
 	}
 

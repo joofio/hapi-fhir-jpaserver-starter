@@ -6,7 +6,7 @@ COPY mkcert-ca.crt* /tmp/
 RUN if [ -f /tmp/mkcert-ca.crt ]; then \
       keytool -importcert -trustcacerts -noprompt -storepass changeit \
         -keystore $JAVA_HOME/lib/security/cacerts \
-        -file /tmp/mkcert-ca.crt -alias mkcert-ca 2>/dev/null || true; \
+        -file /tmp/mkcert-ca.crt -alias mkcert-ca || true; \
     fi
 
 ARG OPENTELEMETRY_JAVA_AGENT_VERSION=2.24.0
