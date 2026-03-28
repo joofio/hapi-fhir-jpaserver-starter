@@ -1,11 +1,13 @@
 FROM docker.io/library/maven:3.9.12-eclipse-temurin-17 AS build-hapi
 WORKDIR /tmp/hapi-fhir-jpaserver-starter
 
-# Import mkcert CA certificate for HTTPS interception environments
-COPY mkcert-ca.crt /tmp/mkcert-ca.crt
-RUN keytool -importcert -trustcacerts -noprompt -storepass changeit \
-    -keystore $JAVA_HOME/lib/security/cacerts \
-    -file /tmp/mkcert-ca.crt -alias mkcert-ca
+# Import CA certificate for HTTPS interception environments (optional, can be empty)
+COPY mkcert-ca.crt* /tmp/
+RUN if [ -f /tmp/mkcert-ca.crt ]; then \
+      keytool -importcert -trustcacerts -noprompt -storepass changeit \
+        -keystore $JAVA_HOME/lib/security/cacerts \
+        -file /tmp/mkcert-ca.crt -alias mkcert-ca 2>/dev/null || true; \
+    fi
 
 ARG OPENTELEMETRY_JAVA_AGENT_VERSION=2.24.0
 RUN curl -LSsO https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${OPENTELEMETRY_JAVA_AGENT_VERSION}/opentelemetry-javaagent.jar
@@ -56,8 +58,8 @@ WORKDIR /app
 
 COPY --chown=nonroot:nonroot --from=build-distroless /app /app
 COPY --chown=nonroot:nonroot --from=build-hapi /tmp/hapi-fhir-jpaserver-starter/opentelemetry-javaagent.jar /app
-# custom_content_path (hapi.fhir.custom_content_path) and app_content_path (hapi.fhir.app_content_path) dirs
-COPY --chown=nonroot:nonroot custom/ /app/custom/
-COPY --chown=nonroot:nonroot configs/ /app/configs/
+# Custom content paths are configured via volume mounts (see docker-compose.yml)
+# - custom_content_path: mount to /custom (serves at /content/)
+# - app_content_path: mount to /apps (serves at /web/)
 
 ENTRYPOINT ["java", "--class-path", "/app/main.war", "-Dloader.path=main.war!/WEB-INF/classes/,main.war!/WEB-INF/,/app/extra-classes", "org.springframework.boot.loader.PropertiesLauncher"]

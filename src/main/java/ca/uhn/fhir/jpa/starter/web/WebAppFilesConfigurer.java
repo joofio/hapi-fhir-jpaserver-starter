@@ -5,12 +5,9 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
-import org.springframework.core.io.FileUrlResource;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.net.MalformedURLException;
 
 @Configuration
 @ConditionalOnProperty(prefix = "hapi.fhir", name = "app_content_path")
@@ -21,7 +18,6 @@ public class WebAppFilesConfigurer implements WebMvcConfigurer {
 
 	public WebAppFilesConfigurer(AppProperties appProperties) {
 		appContentPath = appProperties.getApp_content_path();
-		if (appContentPath.endsWith("/")) appContentPath = appContentPath.substring(0, appContentPath.lastIndexOf('/'));
 	}
 
 	@Override
@@ -29,10 +25,18 @@ public class WebAppFilesConfigurer implements WebMvcConfigurer {
 		if (!theRegistry.hasMappingForPattern(WEB_CONTENT + "/**")) {
 			{
 				try {
+					String path = appContentPath;
+					if (!path.endsWith("/")) {
+						path = path + "/";
+					}
+					// Ensure proper file:// URL format for absolute paths
+					if (path.startsWith("/")) {
+						path = "file://" + path;
+					}
 					theRegistry
 							.addResourceHandler(WEB_CONTENT + "/**")
-							.addResourceLocations(new FileUrlResource(appContentPath + "/"));
-				} catch (MalformedURLException e) {
+							.addResourceLocations(path);
+				} catch (Exception e) {
 					throw new RuntimeException(e);
 				}
 			}

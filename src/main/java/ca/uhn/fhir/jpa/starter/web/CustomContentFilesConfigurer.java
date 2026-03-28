@@ -4,11 +4,8 @@ import ca.uhn.fhir.jpa.starter.AppProperties;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.FileUrlResource;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.net.MalformedURLException;
 
 @Configuration
 @ConditionalOnProperty(prefix = "hapi.fhir", name = "custom_content_path")
@@ -19,8 +16,6 @@ public class CustomContentFilesConfigurer implements WebMvcConfigurer {
 
 	public CustomContentFilesConfigurer(AppProperties appProperties) {
 		customContentPath = appProperties.getCustom_content_path();
-		if (customContentPath.endsWith("/"))
-			customContentPath = customContentPath.substring(0, customContentPath.lastIndexOf('/'));
 	}
 
 	@Override
@@ -28,10 +23,18 @@ public class CustomContentFilesConfigurer implements WebMvcConfigurer {
 		if (!theRegistry.hasMappingForPattern(CUSTOM_CONTENT + "/**")) {
 
 			try {
+				String path = customContentPath;
+				if (!path.endsWith("/")) {
+					path = path + "/";
+				}
+				// Ensure proper file:// URL format for absolute paths
+				if (path.startsWith("/")) {
+					path = "file://" + path;
+				}
 				theRegistry
 						.addResourceHandler(CUSTOM_CONTENT + "/**")
-						.addResourceLocations(new FileUrlResource(customContentPath + "/"));
-			} catch (MalformedURLException e) {
+						.addResourceLocations(path);
+			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 		}

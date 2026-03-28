@@ -9,3 +9,4 @@ target/jacoco.exec
 target/*.original
 .idea
 .git
+data/
