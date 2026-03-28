@@ -1,0 +1,140 @@
+# =============================================================================
+# HAPI FHIR Terminology Server Configuration
+# =============================================================================
+# Configuration adapted from https://github.com/hl7-pt/servidor-terminologias
+# =============================================================================
+
+hapi:
+  fhir:
+    # URL pública do servidor (alterar em produção)
+    server_address: http://localhost:8080/fhir
+    
+    # Versão FHIR suportada
+    fhir_version: R5
+    
+    # Tipos de recursos suportados
+    supported_resource_types:
+      - CodeSystem
+      - ValueSet
+      - StructureDefinition
+      - ConceptMap
+    
+    # Formato padrão das respostas
+    default_encoding: JSON
+    default_pretty_print: true
+    default_page_size: 10
+    
+    # NOTE: custom_content_path and app_content_path are disabled because
+    # the pre-built hapiproject/hapi:latest image has a bug where it strips
+    # the trailing slash from the path. To use these features, build from source.
+    # custom_content_path: /custom/
+    # app_content_path: /apps/
+    
+    # OpenAPI/Swagger
+    openapi_enabled: true
+    
+    # Funcionalidades de pesquisa
+    allow_cascading_deletes: true
+    allow_contains_searches: true
+    allow_multiple_delete: true
+    allow_override_default_search_params: true
+    auto_create_placeholder_reference_targets: false
+    allow_external_references: true
+    enable_index_missing_fields: true
+    enable_index_of_type: true
+    enable_index_contained_resource: true
+    
+    # Bundles permitidos
+    allowed_bundle_types: COLLECTION,DOCUMENT,MESSAGE,TRANSACTION,TRANSACTIONRESPONSE,BATCH,BATCHRESPONSE,HISTORY,SEARCHSET
+    
+    # Clinical Reasoning (desativado)
+    cr:
+      enabled: false
+      caregaps:
+        reporter: "default"
+        section_author: "default"
+      cql:
+        use_embedded_libraries: true
+        compiler:
+          error_level: Info
+          signature_level: All
+          enable_annotations: true
+          enable_locators: true
+          enable_results_type: true
+          enable_detailed_errors: true
+
+    # IPS (desativado)
+    ips_enabled: false
+    
+    # Narrativas
+    narrative_enabled: true
+    
+    # Estratégia de IDs
+    client_id_strategy: ALPHANUMERIC
+    
+    # Configurações de proxy
+    use_apache_address_strategy: true
+    use_apache_address_strategy_https: true
+    
+    # CORS
+    cors:
+      allow_Credentials: true
+      allowed_origin:
+        - '*'
+    
+    # Pool de threads de pesquisa
+    search-coord-core-pool-size: 20
+    search-coord-max-pool-size: 100
+    search-coord-queue-capacity: 200
+    
+    # Tester UI
+    tester:
+      home:
+        name: Local Tester
+        server_address: "http://localhost:8080/fhir"
+        refuse_to_fetch_third_party_urls: false
+        fhir_version: R5
+      global:
+        name: Global Tester
+        server_address: "https://hapi.fhir.org/baseR5"
+        refuse_to_fetch_third_party_urls: false
+        fhir_version: R5
+    
+    # Subscrições (desativadas)
+    subscription:
+      resthook_enabled: false
+      websocket_enabled: false
+
+# -----------------------------------------------------------------------------
+# BASE DE DADOS (PostgreSQL)
+# -----------------------------------------------------------------------------
+
+spring:
+  main:
+    allow-circular-references: true
+  flyway:
+    enabled: false
+    check-location: false
+    baselineOnMigrate: true
+  datasource:
+    url: 'jdbc:postgresql://hapi-fhir-postgres:5432/hapi'
+    username: admin
+    password: admin
+    driverClassName: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
+    max-active: 20
+  batch:
+    job:
+      enabled: false
+
+# -----------------------------------------------------------------------------
+# MONITORIZAÇÃO E MÉTRICAS
+# -----------------------------------------------------------------------------
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,prometheus"

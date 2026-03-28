@@ -1,24 +1,18 @@
 services:
   hapi-fhir-jpaserver-start:
-    build: .
+    # Using pre-built image because Docker build has SSL certificate issues in this build environment
+    # For local builds, change to "build: ." to build from source
+    image: hapiproject/hapi:latest
     container_name: hapi-fhir-jpaserver-start
     restart: on-failure
     environment:
-      SPRING_DATASOURCE_URL: "jdbc:postgresql://hapi-fhir-postgres:5432/hapi"
-      SPRING_DATASOURCE_USERNAME: "admin"
-      SPRING_DATASOURCE_PASSWORD: "admin"
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.postgresql.Driver"
-      HIBERNATE_DIALECT: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
+      SPRING_CONFIG_LOCATION: 'file:///data/hapi/application.yml'
+    volumes:
+      - ./hapi_config:/data/hapi
+      - ./web_content:/custom
+      - ./apps:/apps
     ports:
       - "8080:8080"
-    # Uncomment to enable periodic health checks.
-    # Can also be run manually: docker exec hapi-fhir-jpaserver-start java -cp /app HealthCheck
-    # healthcheck:
-    #   test: ["CMD", "java", "-cp", "/app", "HealthCheck"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   start_period: 60s
-    #   retries: 3
     depends_on:
       hapi-fhir-postgres:
         condition: service_healthy
