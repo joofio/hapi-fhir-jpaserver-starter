@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Registo de CodeSystem</title>
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/fonts/font-awesome.min.css">
+    <link rel="stylesheet" href="assets/css/styles.min.css">
+    <link rel="stylesheet" href="assets/css/common.css">
+
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+    <link rel="icon" href="favicon.ico" sizes="32x32" />
+
+    <style>
+        .form-section {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .form-section h5 {
+            border-bottom: 2px solid #4a0c36;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .concept-row {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #dee2e6;
+        }
+
+        .concept-row:hover {
+            background-color: #e9ecef;
+        }
+
+        .btn-remove-concept {
+            color: #dc3545;
+            cursor: pointer;
+        }
+
+        .btn-remove-concept:hover {
+            color: #a71d2a;
+        }
+
+        #conceptsList {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .required-field::after {
+            content: " *";
+            color: #dc3545;
+        }
+
+        .json-preview {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .alert-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1050;
+            max-width: 400px;
+        }
+
+        .import-section {
+            border: 2px dashed #dee2e6;
+            padding: 25px;
+            text-align: center;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .import-section:hover {
+            border-color: #4a0c36;
+            background-color: #fdf5fa;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <div id="header-container"></div>
+    
+    <script>
+        $(document).ready(function () {
+            // Load the header
+            $("#header-container").load("header.html", function() {
+                // Mark current page as active
+                $('a[href="csregister.html"]').addClass('active');
+            });
+        });
+    </script>
+
+    <!-- Page Header -->
+    <div class="page-header" style="background: linear-gradient(135deg, #4a0c36 0%, #6f145a 100%);">
+        <h1>✏️ Registo de CodeSystem</h1>
+        <p>Crie e registe novos CodeSystems no servidor FHIR</p>
+    </div>
+
+    <!-- Alert Container -->
+    <div class="alert-container" id="alertContainer"></div>
+
+    <!-- Processing Modal -->
+    <div id="processingModal"
+        style="display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); text-align: center;">
+        <div
+            style="display: inline-block; position: relative; top: 50%; transform: translateY(-50%); background-color: white; padding: 20px; border-radius: 5px;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">A processar...</p>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <!-- Title removed - using page header instead -->
+            </div>
+        </div>
+
+        <!-- Import JSON Section -->
+        <div class="row">
+            <div class="col-12">
+                <div class="import-section">
+                    <i class="fa fa-upload fa-2x text-muted mb-2"></i>
+                    <p class="mb-2">Importar CodeSystem existente (JSON)</p>
+                    <input type="file" id="importFile" accept=".json" class="form-control"
+                        style="max-width: 400px; margin: 0 auto;">
+                </div>
+            </div>
+        </div>
+
+        <form id="codeSystemForm">
+            <div class="row">
+                <!-- Left Column - Basic Info -->
+                <div class="col-md-6">
+                    <!-- Basic Information -->
+                    <div class="form-section">
+                        <h5><i class="fa fa-info-circle"></i> Informação Básica</h5>
+
+                        <div class="mb-3">
+                            <label for="csId" class="form-label">ID</label>
+                            <input type="text" class="form-control" id="csId" placeholder="ex: my-codesystem">
+                            <small class="text-muted">Identificador único do recurso (opcional, será gerado
+                                automaticamente se vazio)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="csUrl" class="form-label required-field">URL</label>
+                            <input type="url" class="form-control" id="csUrl" required
+                                placeholder="ex: http://hl7.pt/fhir/CodeSystem/my-codesystem">
+                            <small class="text-muted">URL canónica que identifica este CodeSystem</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="csName" class="form-label required-field">Nome</label>
+                            <input type="text" class="form-control" id="csName" required placeholder="ex: MyCodeSystem">
+                            <small class="text-muted">Nome computacional (sem espaços)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="csTitle" class="form-label required-field">Título</label>
+                            <input type="text" class="form-control" id="csTitle" required
+                                placeholder="ex: O Meu CodeSystem">
+                            <small class="text-muted">Nome legível para humanos</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="csVersion" class="form-label">Versão</label>
+                            <input type="text" class="form-control" id="csVersion" placeholder="ex: 1.0.0">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="csStatus" class="form-label required-field">Estado</label>
+                            <select class="form-select" id="csStatus" required>
+                                <option value="draft">Draft (Rascunho)</option>
+                                <option value="active">Active (Ativo)</option>
+                                <option value="retired">Retired (Retirado)</option>
+                                <option value="unknown">Unknown (Desconhecido)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="csDescription" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="csDescription" rows="3"
+                                placeholder="Descrição do CodeSystem..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="csPurpose" class="form-label">Propósito</label>
+                            <textarea class="form-control" id="csPurpose" rows="2"
+                                placeholder="Propósito do CodeSystem..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Publisher Information -->
+                    <div class="form-section">
+                        <h5><i class="fa fa-user"></i> Informação do Publicador</h5>
+
+                        <div class="mb-3">
+                            <label for="csPublisher" class="form-label">Publicador</label>
+                            <input type="text" class="form-control" id="csPublisher" placeholder="ex: HL7 Portugal">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="csContactName" class="form-label">Nome do Contacto</label>
+                            <input type="text" class="form-control" id="csContactName" placeholder="ex: Equipa Técnica">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="csContactEmail" class="form-label">Email do Contacto</label>
+                            <input type="email" class="form-control" id="csContactEmail" placeholder="ex: info@hl7.pt">
+                        </div>
+                    </div>
+
+                    <!-- Technical Properties -->
+                    <div class="form-section">
+                        <h5><i class="fa fa-cog"></i> Propriedades Técnicas</h5>
+
+                        <div class="mb-3">
+                            <label for="csContent" class="form-label required-field">Tipo de Conteúdo</label>
+                            <select class="form-select" id="csContent" required>
+                                <option value="complete">Complete - Todos os conceitos estão definidos</option>
+                                <option value="supplement">Supplement - Suplemento a outro CodeSystem</option>
+                                <option value="fragment">Fragment - Subconjunto de conceitos</option>
+                                <option value="not-present">Not Present - Sem conceitos definidos</option>
+                                <option value="example">Example - Apenas exemplos</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="csCaseSensitive" class="form-label">Sensível a Maiúsculas</label>
+                            <select class="form-select" id="csCaseSensitive">
+                                <option value="true">Sim</option>
+                                <option value="false" selected>Não</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="csValueSet" class="form-label">ValueSet Associado</label>
+                            <input type="url" class="form-control" id="csValueSet"
+                                placeholder="ex: http://hl7.pt/fhir/ValueSet/my-valueset">
+                            <small class="text-muted">URL do ValueSet que inclui todos os códigos deste
+                                CodeSystem</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="csHierarchyMeaning" class="form-label">Significado da Hierarquia</label>
+                            <select class="form-select" id="csHierarchyMeaning">
+                                <option value="">Não especificado</option>
+                                <option value="grouped-by">Grouped By - Agrupamento</option>
+                                <option value="is-a">Is-A - Relação de especialização</option>
+                                <option value="part-of">Part Of - Relação de composição</option>
+                                <option value="classified-with">Classified With - Classificação</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="csCopyright" class="form-label">Copyright</label>
+                            <textarea class="form-control" id="csCopyright" rows="2"
+                                placeholder="Informação de copyright..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Concepts -->
+                <div class="col-md-6">
+                    <!-- Concepts Section -->
+                    <div class="form-section">
+                        <h5><i class="fa fa-list"></i> Conceitos</h5>
+
+                        <div class="mb-3">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="newConceptCode" placeholder="Código">
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control" id="newConceptDisplay"
+                                        placeholder="Display">
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control" id="newConceptDefinition"
+                                        placeholder="Definição">
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="button" class="btn btn-primary" id="addConceptBtn"
+                                        title="Adicionar conceito">
+                                        <i class="fa fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="conceptsList">
+                            <!-- Concepts will be added here dynamically -->
+                        </div>
+
+                        <div class="text-muted text-center mt-2" id="conceptsCount">
+                            0 conceitos adicionados
+                        </div>
+                    </div>
+
+                    <!-- JSON Preview -->
+                    <div class="form-section">
+                        <h5>
+                            <i class="fa fa-code"></i> Pré-visualização JSON
+                            <button type="button" class="btn btn-sm btn-outline-secondary float-end" id="copyJsonBtn">
+                                <i class="fa fa-copy"></i> Copiar
+                            </button>
+                        </h5>
+                        <div class="json-preview" id="jsonPreview">
+                            {
+                            "resourceType": "CodeSystem"
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Submit Section -->
+                    <div class="form-section">
+                        <h5><i class="fa fa-paper-plane"></i> Submeter</h5>
+
+                        <div class="mb-3">
+                            <label for="serverUrl" class="form-label">URL do Servidor FHIR</label>
+                            <input type="url" class="form-control" id="serverUrl" readonly>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-success btn-lg" id="submitBtn">
+                                <i class="fa fa-upload"></i> Submeter CodeSystem
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="validateBtn">
+                                <i class="fa fa-check-circle"></i> Validar
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" id="clearBtn">
+                                <i class="fa fa-trash"></i> Limpar Formulário
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Store concepts
+        let concepts = [];
+        let serverUrl = "";
+
+        // Load configuration
+        document.addEventListener('DOMContentLoaded', async function () {
+            try {
+                const response = await fetch('config.json');
+                const config = await response.json();
+                serverUrl = config.server_url;
+                document.getElementById('serverUrl').value = serverUrl;
+            } catch (error) {
+                console.error('Error loading configuration:', error);
+                showAlert('Erro ao carregar configuração', 'danger');
+            }
+
+            // Set up event listeners
+            setupEventListeners();
+            updateJsonPreview();
+        });
+
+        function setupEventListeners() {
+            // Add concept button
+            document.getElementById('addConceptBtn').addEventListener('click', addConcept);
+
+            // Enter key on concept inputs
+            ['newConceptCode', 'newConceptDisplay', 'newConceptDefinition'].forEach(id => {
+                document.getElementById(id).addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addConcept();
+                    }
+                });
+            });
+
+            // Form inputs - update preview on change
+            document.querySelectorAll('#codeSystemForm input, #codeSystemForm select, #codeSystemForm textarea').forEach(input => {
+                input.addEventListener('input', updateJsonPreview);
+                input.addEventListener('change', updateJsonPreview);
+            });
+
+            // Submit button
+            document.getElementById('submitBtn').addEventListener('click', submitCodeSystem);
+
+            // Validate button
+            document.getElementById('validateBtn').addEventListener('click', validateForm);
+
+            // Clear button
+            document.getElementById('clearBtn').addEventListener('click', clearForm);
+
+            // Copy JSON button
+            document.getElementById('copyJsonBtn').addEventListener('click', copyJson);
+
+            // Import file
+            document.getElementById('importFile').addEventListener('change', importCodeSystem);
+        }
+
+        function addConcept() {
+            const code = document.getElementById('newConceptCode').value.trim();
+            const display = document.getElementById('newConceptDisplay').value.trim();
+            const definition = document.getElementById('newConceptDefinition').value.trim();
+
+            if (!code) {
+                showAlert('O código é obrigatório', 'warning');
+                return;
+            }
+
+            // Check for duplicate code
+            if (concepts.some(c => c.code === code)) {
+                showAlert('Este código já existe', 'warning');
+                return;
+            }
+
+            const concept = { code };
+            if (display) concept.display = display;
+            if (definition) concept.definition = definition;
+
+            concepts.push(concept);
+            renderConcepts();
+            updateJsonPreview();
+
+            // Clear inputs
+            document.getElementById('newConceptCode').value = '';
+            document.getElementById('newConceptDisplay').value = '';
+            document.getElementById('newConceptDefinition').value = '';
+            document.getElementById('newConceptCode').focus();
+        }
+
+        function removeConcept(index) {
+            concepts.splice(index, 1);
+            renderConcepts();
+            updateJsonPreview();
+        }
+
+        function renderConcepts() {
+            const container = document.getElementById('conceptsList');
+            container.innerHTML = '';
+
+            concepts.forEach((concept, index) => {
+                const row = document.createElement('div');
+                row.className = 'concept-row';
+                row.innerHTML = `
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <strong>${escapeHtml(concept.code)}</strong>
+                        </div>
+                        <div class="col-md-4">
+                            ${escapeHtml(concept.display || '-')}
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">${escapeHtml(concept.definition || '-')}</small>
+                        </div>
+                        <div class="col-md-1 text-end">
+                            <i class="fa fa-times btn-remove-concept" onclick="removeConcept(${index})" title="Remover"></i>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+
+            document.getElementById('conceptsCount').textContent =
+                `${concepts.length} conceito${concepts.length !== 1 ? 's' : ''} adicionado${concepts.length !== 1 ? 's' : ''}`;
+        }
+
+        function buildCodeSystem() {
+            const cs = {
+                resourceType: "CodeSystem"
+            };
+
+            // ID
+            const id = document.getElementById('csId').value.trim();
+            if (id) cs.id = id;
+
+            // URL (required)
+            const url = document.getElementById('csUrl').value.trim();
+            if (url) cs.url = url;
+
+            // Name
+            const name = document.getElementById('csName').value.trim();
+            if (name) cs.name = name;
+
+            // Title
+            const title = document.getElementById('csTitle').value.trim();
+            if (title) cs.title = title;
+
+            // Version
+            const version = document.getElementById('csVersion').value.trim();
+            if (version) cs.version = version;
+
+            // Status (required)
+            cs.status = document.getElementById('csStatus').value;
+
+            // Description
+            const description = document.getElementById('csDescription').value.trim();
+            if (description) cs.description = description;
+
+            // Purpose
+            const purpose = document.getElementById('csPurpose').value.trim();
+            if (purpose) cs.purpose = purpose;
+
+            // Publisher
+            const publisher = document.getElementById('csPublisher').value.trim();
+            if (publisher) cs.publisher = publisher;
+
+            // Contact
+            const contactName = document.getElementById('csContactName').value.trim();
+            const contactEmail = document.getElementById('csContactEmail').value.trim();
+            if (contactName || contactEmail) {
+                const contact = {};
+                if (contactName) contact.name = contactName;
+                if (contactEmail) {
+                    contact.telecom = [{
+                        system: "email",
+                        value: contactEmail
+                    }];
+                }
+                cs.contact = [contact];
+            }
+
+            // Content (required)
+            cs.content = document.getElementById('csContent').value;
+
+            // Case Sensitive
+            const caseSensitive = document.getElementById('csCaseSensitive').value;
+            cs.caseSensitive = caseSensitive === 'true';
+
+            // ValueSet
+            const valueSet = document.getElementById('csValueSet').value.trim();
+            if (valueSet) cs.valueSet = valueSet;
+
+            // Hierarchy Meaning
+            const hierarchyMeaning = document.getElementById('csHierarchyMeaning').value;
+            if (hierarchyMeaning) cs.hierarchyMeaning = hierarchyMeaning;
+
+            // Copyright
+            const copyright = document.getElementById('csCopyright').value.trim();
+            if (copyright) cs.copyright = copyright;
+
+            // Count
+            if (concepts.length > 0) {
+                cs.count = concepts.length;
+                cs.concept = concepts;
+            }
+
+            return cs;
+        }
+
+        function updateJsonPreview() {
+            const cs = buildCodeSystem();
+            document.getElementById('jsonPreview').textContent = JSON.stringify(cs, null, 2);
+        }
+
+        function validateForm() {
+            const url = document.getElementById('csUrl').value.trim();
+            const name = document.getElementById('csName').value.trim();
+            const title = document.getElementById('csTitle').value.trim();
+
+            const errors = [];
+
+            if (!url) errors.push('URL é obrigatório');
+            if (!name) errors.push('Nome é obrigatório');
+            if (!title) errors.push('Título é obrigatório');
+
+            // Validate name format (no spaces, starts with letter)
+            if (name && !/^[A-Za-z][A-Za-z0-9]*$/.test(name)) {
+                errors.push('Nome deve começar com letra e não pode conter espaços ou caracteres especiais');
+            }
+
+            if (errors.length > 0) {
+                showAlert('Erros de validação:<br>' + errors.join('<br>'), 'danger');
+                return false;
+            }
+
+            showAlert('Validação bem sucedida!', 'success');
+            return true;
+        }
+
+        async function submitCodeSystem() {
+            if (!validateForm()) return;
+
+            const modal = document.getElementById('processingModal');
+            modal.style.display = 'block';
+
+            try {
+                const cs = buildCodeSystem();
+                const method = cs.id ? 'PUT' : 'POST';
+                const url = cs.id ? `${serverUrl}/CodeSystem/${cs.id}` : `${serverUrl}/CodeSystem`;
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/fhir+json',
+                        'Accept': 'application/fhir+json'
+                    },
+                    body: JSON.stringify(cs)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showAlert(`CodeSystem criado/atualizado com sucesso! ID: ${result.id}`, 'success');
+                    // Update the ID field if it was auto-generated
+                    if (result.id && !document.getElementById('csId').value) {
+                        document.getElementById('csId').value = result.id;
+                        updateJsonPreview();
+                    }
+                } else {
+                    let errorMsg = 'Erro ao submeter CodeSystem';
+                    if (result.issue) {
+                        errorMsg += ':<br>' + result.issue.map(i => i.diagnostics || i.details?.text || 'Erro desconhecido').join('<br>');
+                    }
+                    showAlert(errorMsg, 'danger');
+                }
+            } catch (error) {
+                console.error('Error submitting CodeSystem:', error);
+                showAlert('Erro de conexão ao servidor: ' + error.message, 'danger');
+            } finally {
+                modal.style.display = 'none';
+            }
+        }
+
+        function clearForm() {
+            if (confirm('Tem certeza que deseja limpar o formulário?')) {
+                document.getElementById('codeSystemForm').reset();
+                concepts = [];
+                renderConcepts();
+                updateJsonPreview();
+            }
+        }
+
+        function copyJson() {
+            const json = document.getElementById('jsonPreview').textContent;
+            navigator.clipboard.writeText(json).then(() => {
+                showAlert('JSON copiado para a área de transferência', 'success');
+            }).catch(err => {
+                console.error('Error copying JSON:', err);
+                showAlert('Erro ao copiar JSON', 'danger');
+            });
+        }
+
+        function importCodeSystem(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const cs = JSON.parse(e.target.result);
+
+                    if (cs.resourceType !== 'CodeSystem') {
+                        showAlert('O ficheiro não contém um CodeSystem válido', 'danger');
+                        return;
+                    }
+
+                    // Populate form fields
+                    if (cs.id) document.getElementById('csId').value = cs.id;
+                    if (cs.url) document.getElementById('csUrl').value = cs.url;
+                    if (cs.name) document.getElementById('csName').value = cs.name;
+                    if (cs.title) document.getElementById('csTitle').value = cs.title;
+                    if (cs.version) document.getElementById('csVersion').value = cs.version;
+                    if (cs.status) document.getElementById('csStatus').value = cs.status;
+                    if (cs.description) document.getElementById('csDescription').value = cs.description;
+                    if (cs.purpose) document.getElementById('csPurpose').value = cs.purpose;
+                    if (cs.publisher) document.getElementById('csPublisher').value = cs.publisher;
+                    if (cs.contact && cs.contact[0]) {
+                        if (cs.contact[0].name) document.getElementById('csContactName').value = cs.contact[0].name;
+                        if (cs.contact[0].telecom) {
+                            const email = cs.contact[0].telecom.find(t => t.system === 'email');
+                            if (email) document.getElementById('csContactEmail').value = email.value;
+                        }
+                    }
+                    if (cs.content) document.getElementById('csContent').value = cs.content;
+                    if (cs.caseSensitive !== undefined) document.getElementById('csCaseSensitive').value = cs.caseSensitive.toString();
+                    if (cs.valueSet) document.getElementById('csValueSet').value = cs.valueSet;
+                    if (cs.hierarchyMeaning) document.getElementById('csHierarchyMeaning').value = cs.hierarchyMeaning;
+                    if (cs.copyright) document.getElementById('csCopyright').value = cs.copyright;
+
+                    // Import concepts
+                    if (cs.concept && Array.isArray(cs.concept)) {
+                        concepts = cs.concept.map(c => ({
+                            code: c.code,
+                            display: c.display,
+                            definition: c.definition
+                        }));
+                        renderConcepts();
+                    }
+
+                    updateJsonPreview();
+                    showAlert('CodeSystem importado com sucesso!', 'success');
+
+                } catch (error) {
+                    console.error('Error parsing JSON:', error);
+                    showAlert('Erro ao analisar o ficheiro JSON', 'danger');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            container.appendChild(alert);
+
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+
+</body>
+
+</html>

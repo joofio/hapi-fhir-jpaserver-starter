@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Visualizador de Mapeamentos</title>
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/fonts/font-awesome.min.css">
+    <link rel="stylesheet" href="assets/css/styles.min.css">
+    <link rel="stylesheet" href="assets/css/prodlist.css">
+    <link rel="stylesheet" href="assets/css/common.css">
+
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="assets/js/script.min.js"></script>
+    <script src="assets/js/cmaplist.js"></script>
+    <link rel="icon" href="favicon.ico" sizes="32x32" />
+</head>
+
+<body>
+    <!-- Header -->
+    <div id="header-container"></div>
+
+    <!-- Processing Modal -->
+    <div id="processingModal"
+        style="display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); text-align: center;">
+        <div
+            style="display: inline-block; position: relative; top: 50%; transform: translateY(-50%); background-color: white; padding: 20px; border-radius: 5px;">
+            <p>A processar...</p>
+        </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header" style="background: linear-gradient(135deg, #144a0c 0%, #1f6f14 100%);">
+        <h1>🔗 Visualizador de Mapeamentos</h1>
+        <p>Visualize os ConceptMaps e mapeamentos entre terminologias</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <div class="table-container">
+            <div id="progressIndicator" style="display: none;"></div>
+            <div class="table-responsive">
+                <table class="table display" id="prod-table" style="width: 100%">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Descrição</th>
+                            <th>Total códigos</th>
+                            <th>Visualizador</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <ul id="container" class="list-group"></ul>
+    
+    <script>
+        $(document).ready(function () {
+            // Load the header
+            $("#header-container").load("header.html", function() {
+                // Mark current page as active
+                $('a[href="cmapbrowser.html"]').addClass('active');
+            });
+
+            $('#prod-table').DataTable({
+                iDisplayLength: 50,
+                dom: 'frtlip',
+                pageLength: 100,
+                lengthMenu: [0, 5, 10, 20, 50, 100, 200, 500],
+                columns: [{ width: "10%" }, { width: "30%" }, { width: "4%" }, { width: "6%" }]
+            });
+        });
+    </script>
+</body>
+</html>

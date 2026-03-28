@@ -1,17 +1,22 @@
 version: '3.7'
 services:
   fhir-server:
-    image: hapiproject/hapi:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: terminology-server
     restart: on-failure
     ports:
       - "8080:8080"
-    volumes:
-      - ./hapi_config:/data/hapi
-      - ./web:/custom
-      - ./apps:/apps
     environment:
-      SPRING_CONFIG_LOCATION: 'file:///data/hapi/application.yml'
+      SPRING_DATASOURCE_URL: 'jdbc:postgresql://db:5432/hapi'
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
+      HAPI_FHIR_FHIR_VERSION: R5
+      HAPI_FHIR_CUSTOM_CONTENT_PATH: /app/custom/
+      HAPI_FHIR_APP_CONTENT_PATH: /app/configs/
     depends_on:
       - db
   db:

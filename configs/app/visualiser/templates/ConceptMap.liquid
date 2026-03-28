@@ -1,0 +1,436 @@
+{% comment %}GET all ConceptMaps from the Bundle - the resource inside each entry{% endcomment %}
+{% assign mpdr = entry | where: "resource.resourceType", "ConceptMap" | first %}
+{% assign mpd = mpdr.resource %}
+
+<style>
+  /* ConceptMap Visualizer Styles */
+  .cm-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* Header card styles */
+  .cm-header-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    margin-bottom: 25px;
+  }
+
+  .cm-header-banner {
+    background: linear-gradient(135deg, #144a0c 0%, #1f6f14 100%);
+    color: white;
+    padding: 25px 30px;
+  }
+
+  .cm-header-banner h2 {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .cm-header-banner .cm-description {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .cm-header-body {
+    padding: 20px 30px;
+  }
+
+  .cm-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+  }
+
+  .cm-meta-item {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cm-meta-label {
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .cm-meta-value {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+  }
+
+  /* Source/Target Section */
+  .cm-mapping-info {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+  }
+
+  .cm-mapping-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .cm-system-box {
+    flex: 1;
+    min-width: 200px;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    border: 1px solid #a5d6a7;
+    border-radius: 8px;
+    padding: 15px;
+  }
+
+  .cm-system-box.source {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-color: #90caf9;
+  }
+
+  .cm-system-box.target {
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    border-color: #a5d6a7;
+  }
+
+  .cm-system-label {
+    font-size: 11px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .cm-system-value {
+    font-size: 13px;
+    color: #333;
+    word-break: break-all;
+    font-family: 'Consolas', 'Monaco', monospace;
+  }
+
+  .cm-arrow {
+    font-size: 24px;
+    color: #144a0c;
+    flex-shrink: 0;
+  }
+
+  /* Table container */
+  .cm-table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    padding: 20px;
+    overflow: hidden;
+  }
+
+  .cm-table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .cm-table-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cm-mapping-count {
+    background: #144a0c;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  /* Table styles */
+  .cm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .cm-table thead th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    color: #495057;
+    font-weight: 600;
+    padding: 12px 15px;
+    text-align: left;
+  }
+
+  .cm-table tbody td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+  }
+
+  .cm-table tbody tr:hover {
+    background-color: #f8f9fa;
+  }
+
+  .cm-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* Code cell styling */
+  .cm-code {
+    font-family: 'Consolas', 'Monaco', monospace;
+    background: #f0f4f8;
+    color: #0c364a;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+  }
+
+  .cm-code.source {
+    background: #e3f2fd;
+    color: #1565c0;
+  }
+
+  .cm-code.target {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  /* Relationship badges */
+  .cm-relationship {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .cm-relationship.equivalent {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+  }
+
+  .cm-relationship.source-is-narrower-than-target {
+    background: #fff3e0;
+    color: #ef6c00;
+    border: 1px solid #ffcc80;
+  }
+
+  .cm-relationship.source-is-broader-than-target {
+    background: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #90caf9;
+  }
+
+  .cm-relationship.related-to {
+    background: #f3e5f5;
+    color: #7b1fa2;
+    border: 1px solid #ce93d8;
+  }
+
+  .cm-relationship.not-related-to {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+  }
+
+  .cm-relationship.default {
+    background: #f5f5f5;
+    color: #616161;
+    border: 1px solid #e0e0e0;
+  }
+
+  /* Display text */
+  .cm-display {
+    font-size: 13px;
+    color: #666;
+    margin-top: 4px;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .cm-container {
+      padding: 10px;
+    }
+
+    .cm-header-banner {
+      padding: 20px;
+    }
+
+    .cm-header-body {
+      padding: 15px 20px;
+    }
+
+    .cm-meta-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .cm-mapping-row {
+      flex-direction: column;
+    }
+
+    .cm-arrow {
+      transform: rotate(90deg);
+    }
+
+    .cm-table-container {
+      padding: 15px;
+      overflow-x: auto;
+    }
+
+    .cm-table {
+      min-width: 500px;
+    }
+  }
+</style>
+
+<div class="cm-container">
+  <!-- Header Card -->
+  <div class="cm-header-card">
+    <div class="cm-header-banner">
+      <h2>🔗 {{ mpd.title | default: mpd.name | default: mpd.id }}</h2>
+      {% if mpd.description %}
+        <p class="cm-description">{{ mpd.description }}</p>
+      {% endif %}
+    </div>
+    <div class="cm-header-body">
+      <div class="cm-meta-grid">
+        <div class="cm-meta-item">
+          <span class="cm-meta-label">Identificador</span>
+          <span class="cm-meta-value">{{ mpd.id }}</span>
+        </div>
+        <div class="cm-meta-item">
+          <span class="cm-meta-label">Versão</span>
+          <span class="cm-meta-value">{{ mpd.version | default: "N/A" }}</span>
+        </div>
+        <div class="cm-meta-item">
+          <span class="cm-meta-label">Estado</span>
+          <span class="cm-meta-value">{{ mpd.status | default: "N/A" }}</span>
+        </div>
+        {% if mpd.publisher %}
+        <div class="cm-meta-item">
+          <span class="cm-meta-label">Publicador</span>
+          <span class="cm-meta-value">{{ mpd.publisher }}</span>
+        </div>
+        {% endif %}
+        {% if mpd.url %}
+        <div class="cm-meta-item">
+          <span class="cm-meta-label">URL Canónico</span>
+          <span class="cm-meta-value" style="font-size: 12px; word-break: break-all;">{{ mpd.url }}</span>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Source/Target Systems -->
+      {% if mpd.group[0].source or mpd.group[0].target %}
+      <div class="cm-mapping-info">
+        <div class="cm-mapping-row">
+          <div class="cm-system-box source">
+            <div class="cm-system-label">
+              <span>📤</span> Sistema Fonte
+            </div>
+            <div class="cm-system-value">{{ mpd.group[0].source | default: "N/A" }}</div>
+          </div>
+          <div class="cm-arrow">➜</div>
+          <div class="cm-system-box target">
+            <div class="cm-system-label">
+              <span>📥</span> Sistema Destino
+            </div>
+            <div class="cm-system-value">{{ mpd.group[0].target | default: "N/A" }}</div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Mappings Table -->
+  <div class="cm-table-container">
+    <div class="cm-table-header">
+      <h3 class="cm-table-title">
+        <span>🗺️</span> Mapeamentos
+      </h3>
+      <span class="cm-mapping-count">{{ mpd.group[0].element.size }} mapeamentos</span>
+    </div>
+
+    <table class="cm-table">
+      <thead>
+        <tr>
+          <th style="width: 30%;">Código Fonte</th>
+          <th style="width: 30%;">Código Destino</th>
+          <th style="width: 20%;">Relação</th>
+          <th style="width: 20%;">Comentário</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for element in mpd.group[0].element %}
+        <tr>
+          <td>
+            <span class="cm-code source">{{ element.code }}</span>
+            {% if element.display %}
+            <div class="cm-display">{{ element.display }}</div>
+            {% endif %}
+          </td>
+          <td>
+            {% if element.target[0].code %}
+            <span class="cm-code target">{{ element.target[0].code }}</span>
+            {% if element.target[0].display %}
+            <div class="cm-display">{{ element.target[0].display }}</div>
+            {% endif %}
+            {% else %}
+            <span style="color: #999;">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% assign rel = element.target[0].relationship %}
+            {% if rel == "equivalent" %}
+            <span class="cm-relationship equivalent">≡ Equivalente</span>
+            {% elsif rel == "source-is-narrower-than-target" %}
+            <span class="cm-relationship source-is-narrower-than-target">⊂ Mais restrito</span>
+            {% elsif rel == "source-is-broader-than-target" %}
+            <span class="cm-relationship source-is-broader-than-target">⊃ Mais abrangente</span>
+            {% elsif rel == "related-to" %}
+            <span class="cm-relationship related-to">↔ Relacionado</span>
+            {% elsif rel == "not-related-to" %}
+            <span class="cm-relationship not-related-to">≠ Não relacionado</span>
+            {% else %}
+            <span class="cm-relationship default">{{ rel | default: "—" }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if element.target[0].comment %}
+            {{ element.target[0].comment }}
+            {% else %}
+            <span style="color: #999;">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+

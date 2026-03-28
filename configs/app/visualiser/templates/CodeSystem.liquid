@@ -1,0 +1,359 @@
+{% comment %}GET all CodeSystems from the Bundle - the resource inside each entry{% endcomment %}
+{% assign mpdr = entry | where: "resource.resourceType", "CodeSystem" | first %}
+{% assign mpd = mpdr.resource %}
+
+<style>
+  /* CodeSystem Visualizer Styles */
+  .cs-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* Header card styles */
+  .cs-header-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    margin-bottom: 25px;
+  }
+
+  .cs-header-banner {
+    background: linear-gradient(135deg, #0c364a 0%, #1a5a7a 100%);
+    color: white;
+    padding: 25px 30px;
+  }
+
+  .cs-header-banner h2 {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .cs-header-banner .cs-description {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .cs-header-body {
+    padding: 20px 30px;
+  }
+
+  .cs-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+  }
+
+  .cs-meta-item {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cs-meta-label {
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .cs-meta-value {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+  }
+
+  /* Properties section */
+  .cs-properties-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+  }
+
+  .cs-properties-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cs-properties-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .cs-property-badge {
+    background: linear-gradient(135deg, #e8f4f8 0%, #d4ecf4 100%);
+    border: 1px solid #b8dae8;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .cs-property-badge strong {
+    color: #0c364a;
+  }
+
+  .cs-property-badge span {
+    color: #555;
+  }
+
+  /* Table container */
+  .cs-table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    padding: 20px;
+    overflow: hidden;
+  }
+
+  .cs-table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .cs-table-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cs-concept-count {
+    background: #0c364a;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  /* Table styles */
+  .cs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .cs-table thead th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    color: #495057;
+    font-weight: 600;
+    padding: 12px 15px;
+    text-align: left;
+  }
+
+  .cs-table tbody td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+  }
+
+  .cs-table tbody tr:hover {
+    background-color: #f8f9fa;
+  }
+
+  .cs-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* Code cell styling */
+  .cs-code {
+    font-family: 'Consolas', 'Monaco', monospace;
+    background: #f0f4f8;
+    color: #0c364a;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+  }
+
+  /* Property badges in table */
+  .cs-prop-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .cs-prop-tag {
+    background: #e8f4f8;
+    border: 1px solid #cde5ef;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .cs-prop-tag strong {
+    color: #0c364a;
+  }
+
+  .cs-prop-tag span {
+    color: #666;
+  }
+
+  .cs-no-data {
+    color: #999;
+    font-style: italic;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .cs-container {
+      padding: 10px;
+    }
+
+    .cs-header-banner {
+      padding: 20px;
+    }
+
+    .cs-header-body {
+      padding: 15px 20px;
+    }
+
+    .cs-meta-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .cs-table-container {
+      padding: 15px;
+      overflow-x: auto;
+    }
+
+    .cs-table {
+      min-width: 600px;
+    }
+  }
+</style>
+
+<div class="cs-container">
+  <!-- Header Card -->
+  <div class="cs-header-card">
+    <div class="cs-header-banner">
+      <h2>📚 {{ mpd.title }}</h2>
+      {% if mpd.description %}
+        <p class="cs-description">{{ mpd.description }}</p>
+      {% endif %}
+    </div>
+    <div class="cs-header-body">
+      <div class="cs-meta-grid">
+        <div class="cs-meta-item">
+          <span class="cs-meta-label">Identificador</span>
+          <span class="cs-meta-value">{{ mpd.id }}</span>
+        </div>
+        <div class="cs-meta-item">
+          <span class="cs-meta-label">Versão</span>
+          <span class="cs-meta-value">{{ mpd.version | default: "N/A" }}</span>
+        </div>
+        <div class="cs-meta-item">
+          <span class="cs-meta-label">Estado</span>
+          <span class="cs-meta-value">{{ mpd.status | default: "N/A" }}</span>
+        </div>
+        {% if mpd.publisher %}
+        <div class="cs-meta-item">
+          <span class="cs-meta-label">Publicador</span>
+          <span class="cs-meta-value">{{ mpd.publisher }}</span>
+        </div>
+        {% endif %}
+        {% if mpd.author[0].name %}
+        <div class="cs-meta-item">
+          <span class="cs-meta-label">Autor</span>
+          <span class="cs-meta-value">{{ mpd.author[0].name }}</span>
+        </div>
+        {% endif %}
+        {% if mpd.url %}
+        <div class="cs-meta-item">
+          <span class="cs-meta-label">URL Canónico</span>
+          <span class="cs-meta-value" style="font-size: 12px; word-break: break-all;">{{ mpd.url }}</span>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if mpd.property %}
+      <div class="cs-properties-section">
+        <div class="cs-properties-title">
+          <span>🏷️</span> Propriedades Definidas
+        </div>
+        <ul class="cs-properties-list">
+          {% for prop in mpd.property %}
+          <li class="cs-property-badge">
+            <strong>{{ prop.code }}</strong>
+            {% if prop.description %}
+              <span>— {{ prop.description }}</span>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Concepts Table -->
+  <div class="cs-table-container">
+    <div class="cs-table-header">
+      <h3 class="cs-table-title">
+        <span>📋</span> Conceitos
+      </h3>
+      <span class="cs-concept-count">{{ mpd.concept.size }} conceitos</span>
+    </div>
+
+    <table class="cs-table">
+      <thead>
+        <tr>
+          <th style="width: 15%;">Código</th>
+          <th style="width: 25%;">Título</th>
+          <th style="width: 35%;">Descrição</th>
+          <th style="width: 25%;">Propriedades</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for element in mpd.concept %}
+        <tr>
+          <td><span class="cs-code">{{ element.code }}</span></td>
+          <td>{{ element.display | default: "-" }}</td>
+          <td>{{ element.definition | default: "-" }}</td>
+          <td>
+            {% if element.property %}
+            <div class="cs-prop-list">
+              {% for prop in element.property %}
+              <span class="cs-prop-tag">
+                <strong>{{ prop.code }}:</strong>
+                <span>{% if prop.valueDecimal != nil %}{{ prop.valueDecimal }}{% elsif prop.valueString %}{{ prop.valueString }}{% elsif prop.valueCode %}{{ prop.valueCode }}{% elsif prop.valueBoolean != nil %}{{ prop.valueBoolean }}{% elsif prop.valueInteger != nil %}{{ prop.valueInteger }}{% else %}—{% endif %}</span>
+              </span>
+              {% endfor %}
+            </div>
+            {% else %}
+            <span class="cs-no-data">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
